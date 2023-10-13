@@ -17,8 +17,27 @@ public class ALU {
      * @return 32-bits
      */
     public DataType add(DataType src, DataType dest) {
-        // TODO
-        return null;
+        int carryIn = 0;
+        StringBuilder res = new StringBuilder();
+        for (int i = 31;i >= 0;i--){
+            int x = src.toString().charAt(i) - '0';
+            int y = dest.toString().charAt(i) - '0';
+            int ans = carryIn + x + y;
+            if (ans == 0){
+                carryIn = 0;
+                res.append("0");
+            } else if (ans == 1) {
+                carryIn = 0;
+                res.append("1");
+            }else if (ans == 2){
+                carryIn = 1;
+                res.append("0");
+            }else {
+                carryIn = 1;
+                res.append("1");
+            }
+        }
+        return new DataType(res.reverse().toString());
     }
 
     /**
@@ -30,8 +49,16 @@ public class ALU {
      * @return 32-bits
      */
     public DataType sub(DataType src, DataType dest) {
-        // TODO
-        return null;
+        StringBuilder newScr = new StringBuilder(src.toString());
+        for (int i = 0;i < 32;i++){
+            if (newScr.charAt(i) == '0'){
+                newScr.replace(i,i+1,"1");
+            }else {
+                newScr.replace(i,i+1,"0");
+            }
+        }
+        DataType oppendent = add(new DataType(newScr.toString()),new DataType("00000000000000000000000000000001"));
+        return add(dest,oppendent);
     }
 
 }

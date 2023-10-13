@@ -14,8 +14,8 @@ public class ALUSubTest {
 
     @Test
     public void SubTest1() {
-        src = new DataType("00000000000000000000000000000100");
-        dest = new DataType("00000000000000000000000000000100");
+        src = new DataType("11000000000000000000000000000000");
+        dest = new DataType("11000000000000000000000000000000");
         result = alu.sub(src, dest);
         assertEquals("00000000000000000000000000000000", result.toString());
     }
