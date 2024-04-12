@@ -1,9 +1,13 @@
 package cpu.mmu;
 
+import cpu.alu.ALU;
 import memory.Memory;
 import memory.cache.Cache;
 import memory.tlb.TLB;
+import util.DataType;
 import util.Transformer;
+
+import java.util.Arrays;
 
 /**
  * MMU内存管理单元抽象类
@@ -39,7 +43,9 @@ public class MMU {
      */
     public byte[] read(String logicAddr, int length) {
         String physicalAddr = addressTranslation(logicAddr, length);
-        // TODO: add cache here
+        if(Cache.isAvailable){
+            return cache.read(physicalAddr,length);
+        }
         return memory.read(physicalAddr, length);
     }
 
@@ -51,7 +57,9 @@ public class MMU {
      */
     public void write(String logicAddr, int length, byte[] data) {
         String physicalAddr = addressTranslation(logicAddr, length);
-        // TODO: add cache here
+        if(Cache.isAvailable){
+            cache.write(physicalAddr,length,data);
+        }
         memory.write(physicalAddr, length, data);
     }
 
@@ -99,11 +107,21 @@ public class MMU {
                 if (offset > 0) pages++;
                 int endvPageNo = startvPageNo + pages - 1;
                 for (int i = startvPageNo; i <= endvPageNo; i++) {
-                    // TODO: add tlb here
-                    if (!memory.isValidPage(i)) {
-                        // 缺页中断，该页不在内存中，内存从磁盘加载该页的数据
-                        memory.page_load(i);
+                    //todo
+                    if (TLB.isAvailable){
+                        if (!tlb.isValidPage(i)){
+                            if (!memory.isValidPage(i)){
+                                memory.page_load(i);
+                            }
+                            tlb.write(i);
+                        }
+                    }else {
+                        if (!memory.isValidPage(i)) {
+                            // 缺页中断，该页不在内存中，内存从磁盘加载该页的数据
+                            memory.page_load(i);
+                        }
                     }
+
                 }
                 physicalAddr = toPagePhysicalAddr(linearAddr);
             }
@@ -119,7 +137,11 @@ public class MMU {
      */
     private String toRealLinearAddr(String logicAddr) {
         // TODO
-        return null;
+        String base = logicAddr.substring(0,16);
+        String offset = logicAddr.substring(16).substring(16);
+        String BASE = "000000000000" + base + "0000";
+        String Offset = "0000000000000000" + offset;
+        return "000000000000" + new ALU().add(new DataType(Offset),new DataType(BASE)).toString().substring(12);
     }
 
     /**
@@ -129,8 +151,8 @@ public class MMU {
      * @return 32-bits 线性地址
      */
     private String toSegLinearAddr(String logicAddr) {
-        // TODO
-        return null;
+        int SegIndex = getSegIndex(logicAddr);
+        return new ALU().add(new DataType(new String(this.memory.getBaseOfSegDes(SegIndex))),new DataType(logicAddr.substring(16))).toString();
     }
 
     /**
@@ -142,7 +164,14 @@ public class MMU {
     private String toPagePhysicalAddr(String linearAddr) {
         // TODO
         // TODO: add tlb here
-        return null;
+        String vPageNo = linearAddr.substring(0,20);
+        String offset = linearAddr.substring(20);
+        int vPAgeNUm = Integer.parseInt(Transformer.binaryToInt(vPageNo));
+        if (TLB.isAvailable){
+            return new String(tlb.getFrameOfPage(vPAgeNUm)) + offset;
+        }else {
+            return String.valueOf(memory.getFrameOfPage(vPAgeNUm)) + offset;
+        }
     }
 
     /**

@@ -1,8 +1,12 @@
 package memory;
 
+import cpu.alu.ALU;
+import cpu.mmu.MMU;
 import memory.cache.Cache;
 import memory.disk.Disk;
 import util.Transformer;
+
+import static memory.disk.Disk.DISK_SIZE_B;
 
 /**
  * 内存抽象类
@@ -31,7 +35,7 @@ public class Memory {
 
     private SegDescriptor[] GDT = new SegDescriptor[8];  // 全局描述符表
 
-    private final PageItem[] pageTbl = new PageItem[Disk.DISK_SIZE_B / Memory.PAGE_SIZE_B]; // 页表
+    private final PageItem[] pageTbl = new PageItem[DISK_SIZE_B / Memory.PAGE_SIZE_B]; // 页表
 
     private boolean[] pageValid = new boolean[MEM_SIZE_B / PAGE_SIZE_B];
 
@@ -100,7 +104,7 @@ public class Memory {
      * @param len   数据段长度
      */
     public void real_load(String pAddr, int len) {
-        // TODO
+        this.write(pAddr,len,disk.read(pAddr,len));
     }
 
     /**
@@ -109,7 +113,16 @@ public class Memory {
      * @param segIndex 段索引
      */
     public void seg_load(int segIndex) {
-        // TODO
+        String pAddr = "00000000000000000000000000000000";
+        if (!PAGE){//分段式
+            int len = (int)Math.pow(2,20);
+            this.write(pAddr,len,disk.read(pAddr,len));
+        }
+        SegDescriptor segDescriptor = getSegDescriptor(segIndex);
+        segDescriptor.base = pAddr.toCharArray();
+        segDescriptor.limit = "11111111111111111111".toCharArray();
+        segDescriptor.validBit = true;
+        segDescriptor.granularity = PAGE;
     }
 
 
@@ -120,6 +133,23 @@ public class Memory {
      * @param vPageNo 虚拟页号
      */
     public void page_load(int vPageNo) {
+        int len = PAGE_SIZE_B;
+        String vPageNum = Transformer.intToBinary(String.valueOf(vPageNo)).substring(12);
+        String pAddr = vPageNum + "000000000000";
+        byte[] data = disk.read(pAddr,len);
+        String pageFrame = "";
+        for (int i = 0; i < pageValid.length; i++) {
+            if (!pageValid[i]) {
+                pageValid[i] = true;
+                pageFrame = Transformer.intToBinary(String.valueOf(i)).substring(12);
+//                this.write(String.valueOf(i * len),len,data);
+                System.arraycopy(data, 0, memory, i * len, len);
+                break;
+            }
+        }
+        PageItem pageItem = getPageItem(vPageNo);
+        pageItem.isInMem = true;
+        pageItem.pageFrame = pageFrame.toCharArray();
         // TODO
     }
 
