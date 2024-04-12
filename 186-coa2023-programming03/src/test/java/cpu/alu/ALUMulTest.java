@@ -14,10 +14,10 @@ public class ALUMulTest {
 
 	@Test
 	public void MulTest1() {
-		src = new DataType("00000000000000000000000000001010");
-		dest = new DataType("00000000000000000000000000001010");
+		src = new DataType("11111111111111111111111111111111");
+		dest = new DataType("00000000000000000000101110000010");
 		result = alu.mul(src, dest);
-		assertEquals("00000000000000000000000001100100", result.toString());
+		assertEquals("11111111111111111111010001111110", result.toString());
 	}
 
 }
