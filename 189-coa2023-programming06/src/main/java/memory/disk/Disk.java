@@ -139,14 +139,46 @@ public class Disk {
          * @param start 数据起始点
          */
         public void seek(int start) {
-            //TODO
+            int Disk_Head_Size = 8 * 1024 * 1024;
+            int Disk_Head_Location = start / Disk_Head_Size;
+            start = start % Disk_Head_Size;
+            int Track_Size = Disk_Head_Size /TRACK_NUM;
+            int Sector_Size = Track_Size / SECTOR_PER_TRACK;
+            track = start / Track_Size;
+            start = start % Track_Size;
+            sector = start / Sector_Size;
+            start = start % Sector_Size;
+            point = start ;
+//            int Sector_Size = SECTOR_PER_TRACK;
+//            int Track_Size = SECTOR_PER_TRACK * TRACK_NUM;
+//            int Disk_Head_Size = 8 * 1024 * 1024;
+//            int Disk_Head_Location = start / Disk_Head_Size;
+//            start = start % Disk_Head_Size;
+//            track = start / Track_Size;
+//            start = start % Track_Size;
+//            sector = start / Sector_Size;
+//            start = start % Sector_Size;
+//            point = start;
         }
 
         /**
          * 磁头移动一个字节
          */
         public void addPoint() {
-            //TODO
+            point++;
+            if (point >= BYTE_PER_SECTOR){
+                point = point - BYTE_PER_SECTOR;
+                sector++;
+                if (sector >= SECTOR_PER_TRACK) {
+                    sector = sector - SECTOR_PER_TRACK;
+                    track++;
+                    if (track >= TRACK_NUM){
+                        track = 0;
+                        sector = 0;
+                        point = 0;
+                    }
+                }
+            }
         }
 
     }
