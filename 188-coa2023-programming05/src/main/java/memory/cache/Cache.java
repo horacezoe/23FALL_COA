@@ -1,6 +1,9 @@
 package memory.cache;
 
+import memory.Memory;
+import memory.cache.cacheReplacementStrategy.FIFOReplacement;
 import memory.cache.cacheReplacementStrategy.ReplacementStrategy;
+import util.BinaryIntegers;
 import util.Transformer;
 import java.util.Arrays;
 
@@ -30,11 +33,17 @@ public class Cache {
         }
     }
 
+    public int getSetSize(){return setSize;}
+
+    public int getSETS() {
+        return SETS;
+    }
+
     public static Cache getCache() {
         return cacheInstance;
     }
 
-    private ReplacementStrategy replacementStrategy;    // 替换策略
+    private ReplacementStrategy replacementStrategy = new FIFOReplacement();// 替换策略
 
     public static boolean isWriteBack;   // 写策略
 
@@ -93,7 +102,13 @@ public class Cache {
                 i++;
             }
 
-            //TODO
+            if (isWriteBack){
+                cache[rowNO].validBit = true;
+                cache[rowNO].dirty = true;
+            }else {
+                String Addr = getPAddr(rowNO);
+                Memory.getMemory().write(Addr,Cache.LINE_SIZE_B,cache_data);
+            }
 
             addr += nextSegLen;
         }
@@ -108,8 +123,15 @@ public class Cache {
      * @return 数据块在Cache中的对应行号
      */
     private int fetch(String pAddr) {
-        //TODO
-        return -1;
+        int block0 = getBlockNO(pAddr);
+        int rowNumber = map(block0);
+        if (rowNumber == -1){
+            int tagLen = 26 - lg2(SETS);
+            int GroupNum = block0 % SETS;
+            String addrTag = BinaryIntegers.ZERO.substring(0,26 - tagLen) + pAddr.substring(0, tagLen);
+            rowNumber = replacementStrategy.replace(setSize * GroupNum,setSize * (GroupNum + 1), addrTag.toCharArray(),Memory.getMemory().read(Transformer.intToBinary(String.valueOf(LINE_SIZE_B * block0)),LINE_SIZE_B));
+        }
+        return rowNumber;
     }
 
 
@@ -120,7 +142,17 @@ public class Cache {
      * @return 返回cache中所对应的行，-1表示未命中
      */
     private int map(int blockNO) {
-        //TODO
+        int tag = blockNO / SETS;//计算tag
+        char[] Tag = Transformer.intToBinary("" + tag).substring(6).toCharArray();
+        int GroupNum = blockNO % SETS;
+        for (int i = GroupNum * setSize;i < setSize * (GroupNum + 1);i++){
+            if (this.isValid(i)){
+                if (Arrays.equals(cache[i].getTag(), Tag)){
+                    replacementStrategy.hit(i);
+                    return i;
+                }
+            }
+        }
         return -1;
     }
 
@@ -132,7 +164,12 @@ public class Cache {
      * @param input 待更新的数据
      */
     public void update(int rowNO, char[] tag, byte[] input) {
-        //TODO
+        cache[rowNO].tag = tag;
+        cache[rowNO].data = input;
+        cache[rowNO].timeStamp = 0L;
+        cache[rowNO].visited = 1;
+        cache[rowNO].dirty = false;
+        cache[rowNO].validBit = true;
     }
 
 
@@ -144,6 +181,22 @@ public class Cache {
      */
     private int getBlockNO(String pAddr) {
         return Integer.parseInt(Transformer.binaryToInt("0" + pAddr.substring(0, 26)));
+    }
+
+    /**
+     *
+     * @param RowNO cache行号
+     * @return pAddr 主存地址
+     */
+
+    public String getPAddr(int RowNO){
+        String pAddr = "";
+        int GroupNum = RowNO / setSize;//算出该行号所在的组号
+        int Bit_of_Group = lg2(SETS);//26位中有多少位是组号
+        String Tag = String.valueOf(cache[RowNO].tag).substring(Bit_of_Group);
+        String MemoryGroupNO = Transformer.intToBinary("" + GroupNum).substring(32-Bit_of_Group);
+        pAddr = Tag + MemoryGroupNO + "000000";
+        return pAddr;
     }
 
 
@@ -210,6 +263,20 @@ public class Cache {
     }
 
     /**
+     * 返回传入的数值的log2
+     *
+     * @param operand 取对数的对象
+     * @return res log2(operand)的值
+     */
+    public int lg2(int operand){
+        int res = 0;
+        for(int i = 1; i < operand ; i *= 2){
+            res++;
+        }
+        return res;
+    }
+
+    /**
      * 输入行号和对应的预期值，判断Cache当前状态是否符合预期
      * 这个方法仅用于测试，请勿修改
      *
@@ -259,6 +326,10 @@ public class Cache {
         cache[rowNO].timeStamp++;
     }
 
+    public void setTimeStampZero(int rowN0){
+        cache[rowN0].timeStamp = 0L;
+    }
+
     //用于FIFO算法，重置时间戳
     public void setTimeStampFIFO(int rowNo){
         cache[rowNo].timeStamp = 1L;
@@ -278,6 +349,9 @@ public class Cache {
     public byte[] getData(int rowNO){
         return cache[rowNO].data;
     }
+
+    //获取该行tag
+    public char[] getTag(int rowN0){return cache[rowN0].getTag();}
 
     /**
      * Cache行，每行长度为(1+22+{@link Cache#LINE_SIZE_B})
