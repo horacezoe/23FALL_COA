@@ -12,6 +12,7 @@ public class DataType {
         if (length == 8 || length == 16 || length == 32) {
             dataStr = String.join("", Collections.nCopies(32 - length, "0")) + dataStr;
             for (int i = 0; i < 32; i++) {
+
                 char temp = dataStr.charAt(i);
                 if (temp == '0' || temp == '1') {
                     data[i / 8] |= ((dataStr.charAt(i) - '0') << (7 - i % 8));

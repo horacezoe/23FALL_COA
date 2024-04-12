@@ -18,6 +18,14 @@ public class FPUMulTest {
 		src = new DataType(Transformer.floatToBinary( "0.25" ));
 		dest = new DataType(Transformer.floatToBinary( "4" ));
 		result = fpu.mul(src, dest);
+		String expect = Transformer.floatToBinary( "1.0" );
+		if (!expect.equals(result.toString())) {
+			System.out.println("src: " + src);
+			System.out.println("dest:" + dest);
+			System.out.println("Expect: " + expect);
+			System.out.println("Actual: " + result);
+			System.out.println();
+		}
 		assertEquals( Transformer.floatToBinary( "1.0" ), result.toString() );
 	}
 
@@ -42,6 +50,15 @@ public class FPUMulTest {
 				src = new DataType(Transformer.intToBinary(Integer.toString(Float.floatToIntBits(input[i]))));
 				dest = new DataType(Transformer.intToBinary(Integer.toString(Float.floatToIntBits(input[j]))));
 				result = fpu.mul(src, dest);
+				String expect = Transformer.intToBinary(Integer.toString(Float.floatToIntBits(input[i] * input[j])));
+				if (!expect.equals(result.toString())) {
+					System.out.println("i = " + i + ", j = " + j);
+					System.out.println("src: " + src);
+					System.out.println("dest:" + dest);
+					System.out.println("Expect: " + expect);
+					System.out.println("Actual: " + result);
+					System.out.println();
+				}
 				assertEquals(Transformer.intToBinary(Integer.toString(Float.floatToIntBits(input[i] * input[j]))), result.toString());
 			}
 		}

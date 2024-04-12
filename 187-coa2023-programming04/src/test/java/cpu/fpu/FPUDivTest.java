@@ -18,6 +18,13 @@ public class FPUDivTest {
         dest = new DataType(Transformer.floatToBinary( "0.4375" ));
         src = new DataType(Transformer.floatToBinary( "0.5" ));
         result = fpu.div(src, dest);
+        if (!Transformer.floatToBinary( "0.875" ).equals( result.toString())) {
+            System.out.println("src: " + src);
+            System.out.println("dest:" + dest);
+            System.out.println("Expect: " + Transformer.floatToBinary( "0.875" ));
+            System.out.println("Actual: " + result);
+            System.out.println();
+        }
         assertEquals(Transformer.floatToBinary( "0.875" ), result.toString());
     }
 
@@ -26,6 +33,13 @@ public class FPUDivTest {
         dest = new DataType(Transformer.floatToBinary( "1.0" ));
         src = new DataType(Transformer.floatToBinary( "4.0" ));
         result = fpu.div(src, dest);
+        if (!Transformer.floatToBinary( "0.25" ).equals( result.toString())) {
+            System.out.println("src: " + src);
+            System.out.println("dest:" + dest);
+            System.out.println("Expect: " + Transformer.floatToBinary( "0.25" ));
+            System.out.println("Actual: " + result);
+            System.out.println();
+        }
         assertEquals(Transformer.floatToBinary( "0.25" ), result.toString());
     }
 
@@ -50,6 +64,13 @@ public class FPUDivTest {
         dest = new DataType(Transformer.floatToBinary( "0.4375" ));
         src = new DataType(Transformer.floatToBinary( "0.625" ));
         result = fpu.div(src, dest);
+        if (!Transformer.floatToBinary( "0.7" ).equals( result.toString())) {
+            System.out.println("src: " + src);
+            System.out.println("dest:" + dest);
+            System.out.println("Expect: " + Transformer.floatToBinary( "0.7" ));
+            System.out.println("Actual: " + result);
+            System.out.println();
+        }
         assertEquals(Transformer.floatToBinary("0.7"), result.toString());
     }
 
